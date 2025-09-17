@@ -24,7 +24,7 @@ func NewPostgresRepository(databaseDSN string) (*PostgresRepository, error) {
 
 func (p *PostgresRepository) CreateUser(ctx context.Context, login, passwordHash string) (int, error) {
 	var userID int
-	query := "INSERT INTO users (login, password_hash) VALUES ($1, $2) ON CONFLICT (login) DO NOTHING RETURNING id"
+	query := "INSERT INTO t_user (login, password_hash) VALUES ($1, $2) ON CONFLICT (login) DO NOTHING RETURNING id"
 	err := p.db.QueryRowContext(ctx, query, login, passwordHash).Scan(&userID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -37,9 +37,8 @@ func (p *PostgresRepository) CreateUser(ctx context.Context, login, passwordHash
 
 func (p *PostgresRepository) GetUserByLogin(ctx context.Context, login string) (*model.DbUser, error) {
 	var user model.DbUser
-	var passwordHash string
-	query := "SELECT id, login, password_hash FROM users WHERE login=$1"
-	err := p.db.QueryRowContext(ctx, query, login).Scan(&user.ID, &user.Login, &passwordHash)
+	query := "SELECT id, login, password_hash FROM t_user WHERE login=$1"
+	err := p.db.QueryRowContext(ctx, query, login).Scan(&user.ID, &user.Login, &user.PasswordHash)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrNotFound
