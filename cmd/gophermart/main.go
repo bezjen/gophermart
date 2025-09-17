@@ -39,7 +39,9 @@ func main() {
 	pingHandler := handler.NewPingHandler(gophermartLogger, storage)
 	authorizer := service.NewAuthorizer([]byte(cfg.SecretKey), storage, gophermartLogger)
 	authHandler := handler.NewAuthHandler(gophermartLogger, authorizer)
-	gophermartRouter := router.NewRouter(gophermartLogger, *pingHandler, *authHandler)
+	orderService := service.NewUserOrderService(storage, gophermartLogger)
+	orderHandler := handler.NewOrderHandler(gophermartLogger, orderService)
+	gophermartRouter := router.NewRouter(gophermartLogger, *pingHandler, *authHandler, *orderHandler, authorizer)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

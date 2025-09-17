@@ -7,13 +7,17 @@ import (
 	"github.com/bezjen/gophermart/internal/logger"
 	"github.com/bezjen/gophermart/internal/repository"
 	"github.com/golang-jwt/jwt/v5"
+	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 	"time"
 )
 
+var ErrParse = errors.New("failed to parse token")
+
 type Authorizer interface {
 	Register(ctx context.Context, login, password string) (string, error)
 	Login(ctx context.Context, login, password string) (string, error)
+	ParseToken(tokenString string) (int, error)
 }
 
 type JWTAuthorizer struct {
@@ -70,6 +74,28 @@ func (a *JWTAuthorizer) Login(ctx context.Context, login string, password string
 	}
 
 	return a.generateToken(user.ID)
+}
+
+func (a *JWTAuthorizer) ParseToken(tokenString string) (int, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &gophermartClaims{}, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			a.logger.Error("Unexpected signing method")
+			return nil, ErrParse
+		}
+		return a.secretKey, nil
+	})
+
+	if err != nil {
+		a.logger.Error("Failed to parse token", zap.Error(err), zap.String("token", tokenString))
+		return 0, ErrParse
+	}
+
+	if claims, ok := token.Claims.(*gophermartClaims); ok && token.Valid {
+		return claims.UserID, nil
+	}
+
+	a.logger.Error("Invalid token", zap.String("token", tokenString))
+	return 0, ErrParse
 }
 
 func (a *JWTAuthorizer) generateToken(userID int) (string, error) {
