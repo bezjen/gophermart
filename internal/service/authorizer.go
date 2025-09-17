@@ -88,12 +88,6 @@ func validateCredentials(login string, password string) error {
 	if login == "" || password == "" {
 		return errors.New("login/password cannot be empty") // TODO: add custom error types
 	}
-	if len(login) < 3 || len(login) > 50 {
-		return errors.New("login must be 3-50 characters")
-	}
-	if len(password) < 8 {
-		return errors.New("password must be at least 8 characters")
-	}
 	return nil
 }
 
