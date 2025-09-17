@@ -10,6 +10,7 @@ import (
 	"github.com/bezjen/gophermart/internal/logger"
 	"github.com/bezjen/gophermart/internal/repository"
 	"github.com/bezjen/gophermart/internal/router"
+	"github.com/bezjen/gophermart/internal/service"
 	"log"
 	"net/http"
 )
@@ -36,7 +37,9 @@ func main() {
 		}
 	}(storage)
 	pingHandler := handler.NewPingHandler(gophermartLogger, storage)
-	gophermartRouter := router.NewRouter(gophermartLogger, *pingHandler)
+	authorizer := service.NewAuthorizer([]byte(cfg.SecretKey), storage, gophermartLogger)
+	authHandler := handler.NewAuthHandler(gophermartLogger, authorizer)
+	gophermartRouter := router.NewRouter(gophermartLogger, *pingHandler, *authHandler)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

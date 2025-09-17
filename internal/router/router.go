@@ -9,6 +9,7 @@ import (
 
 func NewRouter(logger *logger.Logger,
 	pingHandler handler.PingHandler,
+	authHandler handler.AuthHandler,
 ) *chi.Mux {
 	r := chi.NewRouter()
 	gzipMiddleware := middleware.NewGzipMiddleware(logger)
@@ -18,6 +19,8 @@ func NewRouter(logger *logger.Logger,
 		gzipMiddleware.WithGzipResponseCompression)
 
 	r.Get("/ping", pingHandler.HandlePingRepository)
+	r.Post("/register", authHandler.HandleRegister)
+	r.Post("/login", authHandler.HandleLogin)
 
 	return r
 }
