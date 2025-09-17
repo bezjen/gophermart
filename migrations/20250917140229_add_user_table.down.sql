@@ -1,3 +1,3 @@
-drop table t_user;
+drop index idx_user_login;
 
-drop table idx_user_login;
+drop table t_user;
