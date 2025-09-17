@@ -4,3 +4,5 @@ create table t_user (
     password_hash varchar(255) not null,
     primary key (id)
 );
+
+create index idx_user_login on t_user (login);
