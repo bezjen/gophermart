@@ -33,8 +33,9 @@ func (s *UserBalanceService) GetBalance(ctx context.Context, userID int) (*model
 }
 
 func (s *UserBalanceService) Withdraw(ctx context.Context, userID int, orderNumber string, sum float64) error {
-	if !s.orderService.ValidateOrderNumber(orderNumber) {
-		return ErrOrderNumber
+	err := s.orderService.ValidateOrderNumber(orderNumber)
+	if err != nil {
+		return err
 	}
 	return s.storage.Withdraw(ctx, userID, orderNumber, sum)
 }

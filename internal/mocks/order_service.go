@@ -63,18 +63,18 @@ func (_m *OrderService) GetOrders(ctx context.Context, userID int) ([]model.Orde
 }
 
 // ValidateOrderNumber provides a mock function with given fields: orderNumber
-func (_m *OrderService) ValidateOrderNumber(orderNumber string) bool {
+func (_m *OrderService) ValidateOrderNumber(orderNumber string) error {
 	ret := _m.Called(orderNumber)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ValidateOrderNumber")
 	}
 
-	var r0 bool
-	if rf, ok := ret.Get(0).(func(string) bool); ok {
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string) error); ok {
 		r0 = rf(orderNumber)
 	} else {
-		r0 = ret.Get(0).(bool)
+		r0 = ret.Error(0)
 	}
 
 	return r0

@@ -15,7 +15,7 @@ var ErrOrderNumber = errors.New("invalid order number")
 type OrderService interface {
 	CreateNewOrder(ctx context.Context, userID int, orderNumber string) error
 	GetOrders(ctx context.Context, userID int) ([]model.Order, error)
-	ValidateOrderNumber(orderNumber string) bool
+	ValidateOrderNumber(orderNumber string) error
 }
 
 type UserOrderService struct {
