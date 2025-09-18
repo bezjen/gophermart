@@ -33,6 +33,7 @@ func NewRouter(logger *logger.Logger,
 		r.Get("/api/user/orders", orderHandler.HandleGetOrders)
 		r.Get("/api/user/balance", balanceHandler.HandleGetUserBalance)
 		r.Post("/api/user/balance/withdraw", balanceHandler.HandlePostWithdraw)
+		r.Get("/api/user/withdrawals", balanceHandler.HandleGetWithdrawals)
 	})
 
 	return r

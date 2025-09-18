@@ -72,3 +72,20 @@ func (h *BalanceHandler) HandlePostWithdraw(rw http.ResponseWriter, r *http.Requ
 
 	rw.WriteHeader(http.StatusOK)
 }
+
+func (h *BalanceHandler) HandleGetWithdrawals(rw http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value(middleware.UserIDKey).(int)
+	withdrawals, err := h.balanceService.GetWithdrawals(r.Context(), userID)
+	if err != nil {
+		http.Error(rw, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	if len(withdrawals) == 0 {
+		rw.WriteHeader(http.StatusNoContent)
+		return
+	}
+
+	rw.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(rw).Encode(withdrawals)
+}

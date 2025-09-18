@@ -146,6 +146,25 @@ func (p *PostgresRepository) Withdraw(ctx context.Context, userID int, orderNumb
 	return tx.Commit()
 }
 
+func (p *PostgresRepository) GetWithdrawals(ctx context.Context, userID int) ([]model.Withdrawal, error) {
+	queryWithdrawals := "SELECT order_number, sum, processed_at FROM t_withdrawal WHERE user_id = $1 ORDER BY processed_at ASC"
+	rows, err := p.db.QueryContext(ctx, queryWithdrawals, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var withdrawals []model.Withdrawal
+	for rows.Next() {
+		var w model.Withdrawal
+		if err = rows.Scan(&w.Order, &w.Sum, &w.ProcessedAt); err != nil {
+			return nil, err
+		}
+		withdrawals = append(withdrawals, w)
+	}
+	return withdrawals, rows.Err()
+}
+
 func (p *PostgresRepository) Ping(ctx context.Context) error {
 	return p.db.PingContext(ctx)
 }

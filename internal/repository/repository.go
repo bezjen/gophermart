@@ -24,6 +24,7 @@ type Repository interface {
 
 	GetBalance(ctx context.Context, userID int) (*model.Balance, error)
 	Withdraw(ctx context.Context, userID int, orderNumber string, sum float64) error
+	GetWithdrawals(ctx context.Context, userID int) ([]model.Withdrawal, error)
 
 	Ping(ctx context.Context) error
 	Close() error
