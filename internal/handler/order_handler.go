@@ -7,6 +7,7 @@ import (
 	"github.com/bezjen/gophermart/internal/middleware"
 	"github.com/bezjen/gophermart/internal/repository"
 	"github.com/bezjen/gophermart/internal/service"
+	"go.uber.org/zap"
 	"io"
 	"net/http"
 )
@@ -27,6 +28,10 @@ func (h *OrderHandler) HandlePostNewOrder(rw http.ResponseWriter, r *http.Reques
 	userID := r.Context().Value(middleware.UserIDKey).(int)
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
+		h.logger.Error("Failed to read body",
+			zap.Error(err),
+			zap.Int("userID", userID),
+		)
 		http.Error(rw, "Cannot read request body", http.StatusInternalServerError)
 		return
 	}
@@ -46,6 +51,11 @@ func (h *OrderHandler) HandlePostNewOrder(rw http.ResponseWriter, r *http.Reques
 			http.Error(rw, "Order already uploaded by another user", http.StatusConflict)
 			return
 		}
+		h.logger.Error("Failed to create new order",
+			zap.Error(err),
+			zap.Int("userID", userID),
+			zap.String("orderNumber", orderNumber),
+		)
 		http.Error(rw, "Internal server error", http.StatusInternalServerError)
 		return
 	}
@@ -57,6 +67,10 @@ func (h *OrderHandler) HandleGetOrders(rw http.ResponseWriter, r *http.Request) 
 	userID := r.Context().Value(middleware.UserIDKey).(int)
 	orders, err := h.orderService.GetOrders(r.Context(), userID)
 	if err != nil {
+		h.logger.Error("Failed to get user orders",
+			zap.Error(err),
+			zap.Int("userID", userID),
+		)
 		http.Error(rw, "Internal server error", http.StatusInternalServerError)
 		return
 	}

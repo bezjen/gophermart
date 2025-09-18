@@ -7,6 +7,7 @@ import (
 	"github.com/bezjen/gophermart/internal/model"
 	"github.com/bezjen/gophermart/internal/repository"
 	"github.com/bezjen/gophermart/internal/service"
+	"go.uber.org/zap"
 	"net/http"
 )
 
@@ -35,6 +36,11 @@ func (h *AuthHandler) HandleRegister(rw http.ResponseWriter, r *http.Request) {
 			http.Error(rw, "Login already taken", http.StatusConflict)
 			return
 		}
+		h.logger.Error("Failed to register user",
+			zap.Error(err),
+			zap.String("login", user.Login),
+			zap.String("password", user.Password),
+		)
 		http.Error(rw, "Internal server error", http.StatusInternalServerError)
 		return
 	}

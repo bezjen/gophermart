@@ -21,6 +21,8 @@ type Repository interface {
 	CreateOrder(ctx context.Context, userID int, orderNumber string) error
 	GetOrders(ctx context.Context, userID int) ([]model.Order, error)
 
+	GetBalance(ctx context.Context, userID int) (*model.Balance, error)
+
 	Ping(ctx context.Context) error
 	Close() error
 }

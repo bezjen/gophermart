@@ -41,7 +41,9 @@ func main() {
 	authHandler := handler.NewAuthHandler(gophermartLogger, authorizer)
 	orderService := service.NewUserOrderService(storage, gophermartLogger)
 	orderHandler := handler.NewOrderHandler(gophermartLogger, orderService)
-	gophermartRouter := router.NewRouter(gophermartLogger, *pingHandler, *authHandler, *orderHandler, authorizer)
+	balanceHandler := handler.NewBalanceHandler(gophermartLogger, storage)
+	gophermartRouter := router.NewRouter(gophermartLogger, *pingHandler,
+		*authHandler, *orderHandler, *balanceHandler, authorizer)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

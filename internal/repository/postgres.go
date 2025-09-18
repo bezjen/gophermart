@@ -100,6 +100,16 @@ func (p *PostgresRepository) GetOrders(ctx context.Context, userID int) ([]model
 	return orders, rows.Err()
 }
 
+func (p *PostgresRepository) GetBalance(ctx context.Context, userID int) (*model.Balance, error) {
+	var balance model.Balance
+	query := `SELECT current_balance, withdrawn_balance FROM t_user WHERE id = $1`
+	err := p.db.QueryRowContext(ctx, query, userID).Scan(&balance.Current, &balance.Withdrawn)
+	if err != nil {
+		return nil, err
+	}
+	return &balance, nil
+}
+
 func (p *PostgresRepository) Ping(ctx context.Context) error {
 	return p.db.PingContext(ctx)
 }

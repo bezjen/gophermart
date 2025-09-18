@@ -12,6 +12,7 @@ func NewRouter(logger *logger.Logger,
 	pingHandler handler.PingHandler,
 	authHandler handler.AuthHandler,
 	orderHandler handler.OrderHandler,
+	balanceHandler handler.BalanceHandler,
 	authorizer service.Authorizer,
 ) *chi.Mux {
 	r := chi.NewRouter()
@@ -28,8 +29,9 @@ func NewRouter(logger *logger.Logger,
 
 	r.Group(func(r chi.Router) {
 		r.Use(authMiddleware.WithAuth)
-		r.Post("/orders", orderHandler.HandlePostNewOrder)
-		r.Get("/orders", orderHandler.HandleGetOrders)
+		r.Post("/api/user/orders", orderHandler.HandlePostNewOrder)
+		r.Get("/api/user/orders", orderHandler.HandleGetOrders)
+		r.Get("/api/user/balance", balanceHandler.HandleGetUserBalance)
 	})
 
 	return r
