@@ -13,6 +13,8 @@ import (
 )
 
 var ErrParse = errors.New("failed to parse token")
+var ErrEmptyCredentials = errors.New("empty credentials")
+var ErrInvalidCredentials = errors.New("invalid credentials")
 
 type Authorizer interface {
 	Register(ctx context.Context, login, password string) (string, error)
@@ -66,11 +68,11 @@ func (a *JWTAuthorizer) Login(ctx context.Context, login string, password string
 
 	user, err := a.storage.GetUserByLogin(ctx, login)
 	if err != nil {
-		return "", errors.New("invalid credentials")
+		return "", ErrInvalidCredentials
 	}
 
 	if err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
-		return "", errors.New("invalid credentials")
+		return "", ErrInvalidCredentials
 	}
 
 	return a.generateToken(user.ID)
@@ -112,7 +114,7 @@ func (a *JWTAuthorizer) generateToken(userID int) (string, error) {
 
 func validateCredentials(login string, password string) error {
 	if login == "" || password == "" {
-		return errors.New("login/password cannot be empty") // TODO: add custom error types
+		return ErrEmptyCredentials
 	}
 	return nil
 }

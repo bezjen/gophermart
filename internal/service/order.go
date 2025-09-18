@@ -31,8 +31,9 @@ func NewUserOrderService(storage repository.Repository, logger *logger.Logger) *
 }
 
 func (s *UserOrderService) CreateNewOrder(ctx context.Context, userID int, orderNumber string) error {
-	if !s.ValidateOrderNumber(orderNumber) {
-		return ErrOrderNumber
+	err := s.ValidateOrderNumber(orderNumber)
+	if err != nil {
+		return err
 	}
 	return s.storage.CreateOrder(ctx, userID, orderNumber)
 }
@@ -41,13 +42,16 @@ func (s *UserOrderService) GetOrders(ctx context.Context, userID int) ([]model.O
 	return s.storage.GetOrders(ctx, userID)
 }
 
-func (s *UserOrderService) ValidateOrderNumber(number string) bool {
+func (s *UserOrderService) ValidateOrderNumber(number string) error {
+	if number == "" {
+		return ErrOrderNumber
+	}
 	sum := 0
 	n := len(number)
 	for i := 0; i < n; i++ {
 		digit, err := strconv.Atoi(string(number[n-1-i]))
 		if err != nil {
-			return false
+			return ErrOrderNumber
 		}
 		if i%2 == 1 {
 			digit *= 2
@@ -57,5 +61,8 @@ func (s *UserOrderService) ValidateOrderNumber(number string) bool {
 		}
 		sum += digit
 	}
-	return sum%10 == 0
+	if sum%10 != 0 {
+		return ErrOrderNumber
+	}
+	return nil
 }
