@@ -1,4 +1,4 @@
-//go:generate mockery --name=OrderService --output=../mocks --case=underscore
+//go:generate mockery --name=BalanceService --output=../mocks --case=underscore
 package service
 
 import (
