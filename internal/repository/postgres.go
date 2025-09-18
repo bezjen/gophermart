@@ -110,6 +110,42 @@ func (p *PostgresRepository) GetBalance(ctx context.Context, userID int) (*model
 	return &balance, nil
 }
 
+func (p *PostgresRepository) Withdraw(ctx context.Context, userID int, orderNumber string, sum float64) error {
+	tx, err := p.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	var balance model.Balance
+	queryBalance := "SELECT current_balance, withdrawn_balance FROM t_user WHERE id = $1 FOR UPDATE"
+	err = tx.QueryRowContext(ctx, queryBalance, userID).Scan(&balance.Current, &balance.Withdrawn)
+	if err != nil {
+		return err
+	}
+
+	if balance.Current < sum {
+		return ErrNotEnoughBalance
+	}
+
+	queryUpdateBalance := `
+		UPDATE t_user 
+		SET current_balance = current_balance - $1, withdrawn_balance = withdrawn_balance + $2 
+		WHERE id = $3`
+	_, err = tx.ExecContext(ctx, queryUpdateBalance, sum, sum, userID)
+	if err != nil {
+		return err
+	}
+
+	queryInsert := "INSERT INTO t_withdrawal (user_id, order_number, sum, processed_at) VALUES ($1, $2, $3, NOW())"
+	_, err = tx.ExecContext(ctx, queryInsert, userID, orderNumber, sum)
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
+
 func (p *PostgresRepository) Ping(ctx context.Context) error {
 	return p.db.PingContext(ctx)
 }

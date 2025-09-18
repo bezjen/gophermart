@@ -12,6 +12,7 @@ var (
 	ErrUserExists       = errors.New("user already exists")
 	ErrOrderExists      = errors.New("order already exists")
 	ErrOrderExistsOther = errors.New("order already uploaded by other user")
+	ErrNotEnoughBalance = errors.New("not enough balance")
 )
 
 type Repository interface {
@@ -22,6 +23,7 @@ type Repository interface {
 	GetOrders(ctx context.Context, userID int) ([]model.Order, error)
 
 	GetBalance(ctx context.Context, userID int) (*model.Balance, error)
+	Withdraw(ctx context.Context, userID int, orderNumber string, sum float64) error
 
 	Ping(ctx context.Context) error
 	Close() error

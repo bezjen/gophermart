@@ -24,14 +24,15 @@ func NewRouter(logger *logger.Logger,
 		gzipMiddleware.WithGzipResponseCompression)
 
 	r.Get("/ping", pingHandler.HandlePingRepository)
-	r.Post("/register", authHandler.HandleRegister)
-	r.Post("/login", authHandler.HandleLogin)
+	r.Post("/api/user/register", authHandler.HandleRegister)
+	r.Post("/api/user/login", authHandler.HandleLogin)
 
 	r.Group(func(r chi.Router) {
 		r.Use(authMiddleware.WithAuth)
 		r.Post("/api/user/orders", orderHandler.HandlePostNewOrder)
 		r.Get("/api/user/orders", orderHandler.HandleGetOrders)
 		r.Get("/api/user/balance", balanceHandler.HandleGetUserBalance)
+		r.Post("/api/user/balance/withdraw", balanceHandler.HandlePostWithdraw)
 	})
 
 	return r
