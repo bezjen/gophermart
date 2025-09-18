@@ -67,7 +67,7 @@ func TestUserBalanceService_Withdraw(t *testing.T) {
 			orderNumber: "49927398716",
 			sum:         50.0,
 			mockSetup: func(mockRepo *mocks.Repository, mockOrderService *mocks.OrderService) {
-				mockOrderService.On("ValidateOrderNumber", "49927398716").Return(true)
+				mockOrderService.On("ValidateOrderNumber", "49927398716").Return(nil)
 				mockRepo.On("Withdraw", mock.Anything, 1, "49927398716", 50.0).Return(nil)
 			},
 			expectedError: nil,
@@ -78,7 +78,7 @@ func TestUserBalanceService_Withdraw(t *testing.T) {
 			orderNumber: "1234567890",
 			sum:         50.0,
 			mockSetup: func(mockRepo *mocks.Repository, mockOrderService *mocks.OrderService) {
-				mockOrderService.On("ValidateOrderNumber", "1234567890").Return(false)
+				mockOrderService.On("ValidateOrderNumber", "1234567890").Return(ErrOrderNumber)
 			},
 			expectedError: ErrOrderNumber,
 		},
@@ -88,7 +88,7 @@ func TestUserBalanceService_Withdraw(t *testing.T) {
 			orderNumber: "49927398716",
 			sum:         50.0,
 			mockSetup: func(mockRepo *mocks.Repository, mockOrderService *mocks.OrderService) {
-				mockOrderService.On("ValidateOrderNumber", "49927398716").Return(true)
+				mockOrderService.On("ValidateOrderNumber", "49927398716").Return(nil)
 				mockRepo.On("Withdraw", mock.Anything, 1, "49927398716", 50.0).Return(repository.ErrNotEnoughBalance)
 			},
 			expectedError: repository.ErrNotEnoughBalance,
@@ -99,7 +99,7 @@ func TestUserBalanceService_Withdraw(t *testing.T) {
 			orderNumber: "49927398716",
 			sum:         0.0,
 			mockSetup: func(mockRepo *mocks.Repository, mockOrderService *mocks.OrderService) {
-				mockOrderService.On("ValidateOrderNumber", "49927398716").Return(true)
+				mockOrderService.On("ValidateOrderNumber", "49927398716").Return(nil)
 				mockRepo.On("Withdraw", mock.Anything, 1, "49927398716", 0.0).Return(nil)
 			},
 			expectedError: nil,
@@ -110,7 +110,7 @@ func TestUserBalanceService_Withdraw(t *testing.T) {
 			orderNumber: "49927398716",
 			sum:         -10.0,
 			mockSetup: func(mockRepo *mocks.Repository, mockOrderService *mocks.OrderService) {
-				mockOrderService.On("ValidateOrderNumber", "49927398716").Return(true)
+				mockOrderService.On("ValidateOrderNumber", "49927398716").Return(nil)
 				mockRepo.On("Withdraw", mock.Anything, 1, "49927398716", -10.0).Return(nil)
 			},
 			expectedError: nil,
