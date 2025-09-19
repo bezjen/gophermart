@@ -110,8 +110,8 @@ func (s *AccrualRestService) updateOrderStatus(ctx context.Context, orderNumber 
 			if errors.As(err, &rateLimitErr) {
 				time.Sleep(time.Duration(rateLimitErr.RetryAfter) * time.Second)
 			}
-			return nil
 		}
+		return err
 	}
 
 	if accrualResp == nil {
