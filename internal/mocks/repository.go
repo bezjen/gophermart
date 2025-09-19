@@ -138,9 +138,9 @@ func (_m *Repository) GetOrders(ctx context.Context, userID int) ([]model.Order,
 	return r0, r1
 }
 
-// GetPendingOrders provides a mock function with given fields: ctx
-func (_m *Repository) GetPendingOrders(ctx context.Context) ([]model.Order, error) {
-	ret := _m.Called(ctx)
+// GetPendingOrders provides a mock function with given fields: ctx, limit
+func (_m *Repository) GetPendingOrders(ctx context.Context, limit int) ([]model.Order, error) {
+	ret := _m.Called(ctx, limit)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetPendingOrders")
@@ -148,19 +148,19 @@ func (_m *Repository) GetPendingOrders(ctx context.Context) ([]model.Order, erro
 
 	var r0 []model.Order
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context) ([]model.Order, error)); ok {
-		return rf(ctx)
+	if rf, ok := ret.Get(0).(func(context.Context, int) ([]model.Order, error)); ok {
+		return rf(ctx, limit)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context) []model.Order); ok {
-		r0 = rf(ctx)
+	if rf, ok := ret.Get(0).(func(context.Context, int) []model.Order); ok {
+		r0 = rf(ctx, limit)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]model.Order)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = rf(ctx)
+	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
+		r1 = rf(ctx, limit)
 	} else {
 		r1 = ret.Error(1)
 	}

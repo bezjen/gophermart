@@ -153,7 +153,7 @@ func (s *AccrualRestService) getOrderStatus(ctx context.Context, orderNumber str
 		return nil, fmt.Errorf("accrual service internal error")
 
 	default:
-		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		return nil, fmt.Errorf("unexpected status code: %d", statusCode)
 	}
 }
 
@@ -162,5 +162,5 @@ type RateLimitError struct {
 }
 
 func (e *RateLimitError) Error() string {
-	return fmt.Sprintf("rate limit exceeded, retry after: %s", e.RetryAfter)
+	return fmt.Sprintf("rate limit exceeded, retry after: %d", e.RetryAfter)
 }
