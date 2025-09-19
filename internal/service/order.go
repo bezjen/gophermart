@@ -16,7 +16,7 @@ type OrderService interface {
 	CreateNewOrder(ctx context.Context, userID int, orderNumber string) error
 	GetOrders(ctx context.Context, userID int) ([]model.Order, error)
 	GetPendingOrders(ctx context.Context) ([]model.Order, error)
-	UpdateOrder(ctx context.Context, order model.Order) error
+	UpdateOrderWithBalance(ctx context.Context, order model.Order) error
 	ValidateOrderNumber(orderNumber string) error
 }
 
@@ -73,6 +73,6 @@ func (s *UserOrderService) GetPendingOrders(ctx context.Context) ([]model.Order,
 	return s.storage.GetPendingOrders(ctx)
 }
 
-func (s *UserOrderService) UpdateOrder(ctx context.Context, order model.Order) error {
+func (s *UserOrderService) UpdateOrderWithBalance(ctx context.Context, order model.Order) error {
 	return s.storage.UpdateOrderWithBalance(ctx, order)
 }

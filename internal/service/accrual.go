@@ -2,11 +2,12 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/bezjen/gophermart/internal/model"
-	"github.com/bezjen/gophermart/internal/repository"
 	"github.com/go-resty/resty/v2"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -17,14 +18,14 @@ type AccrualService interface {
 type AccrualRestService struct {
 	client         *resty.Client
 	accrualBaseURL string
-	storage        repository.Repository
+	orderService   OrderService
 }
 
-func NewAccrualRestService(accrualBaseURL string, storage repository.Repository) *AccrualRestService {
+func NewAccrualRestService(accrualBaseURL string, orderService OrderService) *AccrualRestService {
 	return &AccrualRestService{
 		client:         resty.New().SetBaseURL(accrualBaseURL),
 		accrualBaseURL: accrualBaseURL,
-		storage:        storage,
+		orderService:   orderService,
 	}
 }
 
@@ -45,7 +46,7 @@ func (s *AccrualRestService) StartOrderProcessingWorker(ctx context.Context, int
 }
 
 func (s *AccrualRestService) processPendingOrders(ctx context.Context) error {
-	orders, err := s.storage.GetPendingOrders(ctx)
+	orders, err := s.orderService.GetPendingOrders(ctx)
 	if err != nil {
 		return fmt.Errorf("get pending orders: %w", err)
 	}
@@ -70,10 +71,15 @@ func (s *AccrualRestService) processPendingOrders(ctx context.Context) error {
 func (s *AccrualRestService) updateOrderStatus(ctx context.Context, orderNumber string) error {
 	accrualResp, err := s.getOrderStatus(ctx, orderNumber)
 	if err != nil {
-		return err // TODO: handle rate limit error
+		if errors.Is(err, &RateLimitError{}) {
+			if rateLimitErr, ok := err.(*RateLimitError); ok {
+				time.Sleep(time.Duration(rateLimitErr.RetryAfter) * time.Second)
+			}
+			return nil
+		}
 	}
 
-	if accrualResp == nil { // TODO: move to orderService; check current order status (?)
+	if accrualResp == nil {
 		return nil
 	}
 
@@ -83,7 +89,7 @@ func (s *AccrualRestService) updateOrderStatus(ctx context.Context, orderNumber 
 		Accrual: accrualResp.Accrual,
 	}
 
-	return s.storage.UpdateOrderWithBalance(ctx, order)
+	return s.orderService.UpdateOrderWithBalance(ctx, order)
 }
 
 func (s *AccrualRestService) getOrderStatus(ctx context.Context, orderNumber string) (*model.AccrualResponse, error) {
@@ -102,7 +108,10 @@ func (s *AccrualRestService) getOrderStatus(ctx context.Context, orderNumber str
 		return nil, nil
 
 	case http.StatusTooManyRequests:
-		retryAfter := resp.Header().Get("Retry-After")
+		retryAfter, err := strconv.Atoi(resp.Header().Get("Retry-After"))
+		if err != nil {
+			return nil, err
+		}
 		return nil, &RateLimitError{RetryAfter: retryAfter}
 
 	case http.StatusInternalServerError:
@@ -114,7 +123,7 @@ func (s *AccrualRestService) getOrderStatus(ctx context.Context, orderNumber str
 }
 
 type RateLimitError struct {
-	RetryAfter string
+	RetryAfter int
 }
 
 func (e *RateLimitError) Error() string {
