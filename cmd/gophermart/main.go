@@ -49,7 +49,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	accrualService := service.NewAccrualRestService(cfg.AccrualAddr, storage)
+	accrualService := service.NewAccrualRestService(cfg.AccrualAddr, orderService)
 	go accrualService.StartOrderProcessingWorker(ctx, 1*time.Second)
 
 	go func() {
