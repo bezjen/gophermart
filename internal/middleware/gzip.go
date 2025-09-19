@@ -46,10 +46,6 @@ func (m *GzipMiddleware) WithGzipResponseCompression(h http.Handler) http.Handle
 			h.ServeHTTP(w, r)
 			return
 		}
-		if r.Method == http.MethodDelete {
-			h.ServeHTTP(w, r)
-			return
-		}
 
 		gw := compress.NewGzipWriter(w)
 		defer func(gw *compress.GzipWriter) {
