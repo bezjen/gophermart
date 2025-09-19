@@ -93,7 +93,8 @@ func (s *AccrualRestService) getOrderStatus(ctx context.Context, orderNumber str
 		return nil, fmt.Errorf("execute request: %w", err)
 	}
 
-	switch resp.StatusCode() {
+	statusCode := resp.StatusCode()
+	switch statusCode {
 	case http.StatusOK:
 		return &accrualResp, nil
 
