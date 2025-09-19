@@ -14,10 +14,12 @@ type DbUser struct {
 }
 
 type Order struct {
+	ID         int       `json:"-"`
 	Number     string    `json:"number"`
 	Status     string    `json:"status"`
 	Accrual    float64   `json:"accrual,omitempty"`
 	UploadedAt time.Time `json:"uploaded_at"`
+	UserID     int       `json:"-"`
 }
 
 type Balance struct {
@@ -29,4 +31,10 @@ type Withdrawal struct {
 	Order       string    `json:"order"`
 	Sum         float64   `json:"sum"`
 	ProcessedAt time.Time `json:"processed_at,omitempty"`
+}
+
+type AccrualResponse struct {
+	Order   string  `json:"order"`
+	Status  string  `json:"status"`
+	Accrual float64 `json:"accrual"`
 }

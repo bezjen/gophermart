@@ -100,6 +100,67 @@ func (p *PostgresRepository) GetOrders(ctx context.Context, userID int) ([]model
 	return orders, rows.Err()
 }
 
+func (p *PostgresRepository) GetPendingOrders(ctx context.Context) ([]model.Order, error) {
+	rows, err := p.db.QueryContext(ctx,
+		"SELECT id, number, status, accrual, uploaded_at FROM t_order WHERE status in ('NEW', 'PROCESSING', 'REGISTERED') ORDER BY uploaded_at")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var orders []model.Order
+	for rows.Next() {
+		var order model.Order
+		var accrual sql.NullFloat64
+		if err = rows.Scan(&order.ID, &order.Number, &order.Status, &accrual, &order.UploadedAt); err != nil {
+			return nil, err
+		}
+		if accrual.Valid {
+			order.Accrual = accrual.Float64
+		}
+		orders = append(orders, order)
+	}
+	return orders, rows.Err()
+}
+
+func (p *PostgresRepository) UpdateOrderWithBalance(ctx context.Context, order model.Order) error {
+	tx, err := p.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	var dbOrder model.Order
+	getOrderQuery := "SELECT id, status, user_id FROM t_order WHERE number = $1"
+	err = p.db.QueryRowContext(ctx, getOrderQuery, order.Number).Scan(&dbOrder.ID, &dbOrder.Status, &dbOrder.UserID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return ErrNotFound
+		}
+		return err
+	}
+
+	if order.Status == dbOrder.Status {
+		return nil
+	}
+
+	updateOrderQuery := "UPDATE t_order SET status = $1, accrual = $2 WHERE id = $3"
+	_, err = tx.ExecContext(ctx, updateOrderQuery, order.Status, order.Accrual, dbOrder.ID)
+	if err != nil {
+		return err
+	}
+
+	if order.Status == "PROCESSED" && order.Accrual > 0 {
+		updateBalanceQuery := "UPDATE t_user SET current_balance = current_balance + $1 WHERE id = $2"
+		_, err = tx.ExecContext(ctx, updateBalanceQuery, order.Accrual, dbOrder.UserID)
+		if err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit()
+}
+
 func (p *PostgresRepository) GetBalance(ctx context.Context, userID int) (*model.Balance, error) {
 	var balance model.Balance
 	query := `SELECT current_balance, withdrawn_balance FROM t_user WHERE id = $1`

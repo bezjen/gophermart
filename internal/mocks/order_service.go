@@ -62,6 +62,54 @@ func (_m *OrderService) GetOrders(ctx context.Context, userID int) ([]model.Orde
 	return r0, r1
 }
 
+// GetPendingOrders provides a mock function with given fields: ctx
+func (_m *OrderService) GetPendingOrders(ctx context.Context) ([]model.Order, error) {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetPendingOrders")
+	}
+
+	var r0 []model.Order
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) ([]model.Order, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) []model.Order); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.Order)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UpdateOrder provides a mock function with given fields: ctx, order
+func (_m *OrderService) UpdateOrder(ctx context.Context, order model.Order) error {
+	ret := _m.Called(ctx, order)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateOrder")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, model.Order) error); ok {
+		r0 = rf(ctx, order)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // ValidateOrderNumber provides a mock function with given fields: orderNumber
 func (_m *OrderService) ValidateOrderNumber(orderNumber string) error {
 	ret := _m.Called(orderNumber)

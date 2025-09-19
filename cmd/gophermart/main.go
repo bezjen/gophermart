@@ -13,6 +13,7 @@ import (
 	"github.com/bezjen/gophermart/internal/service"
 	"log"
 	"net/http"
+	"time"
 )
 
 func main() {
@@ -48,6 +49,9 @@ func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
+	accrualService := service.NewAccrualRestService("http://localhost:8080", storage)
+	go accrualService.StartOrderProcessingWorker(ctx, 30*time.Second)
 
 	go func() {
 		serverAddr := fmt.Sprintf("%s:%s", cfg.ServerHost, cfg.ServerPort)
