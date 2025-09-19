@@ -16,12 +16,12 @@ func NewRouter(logger *logger.Logger,
 	authorizer service.Authorizer,
 ) *chi.Mux {
 	r := chi.NewRouter()
-	gzipMiddleware := middleware.NewGzipMiddleware(logger)
+	//gzipMiddleware := middleware.NewGzipMiddleware(logger)
 	authMiddleware := middleware.NewAuthMiddleware(authorizer, logger)
 
-	r.Use(
-		gzipMiddleware.WithGzipRequestDecompression,
-		gzipMiddleware.WithGzipResponseCompression)
+	//r.Use(
+	//	gzipMiddleware.WithGzipRequestDecompression,
+	//	gzipMiddleware.WithGzipResponseCompression)
 
 	r.Get("/ping", pingHandler.HandlePingRepository)
 	r.Post("/api/user/register", authHandler.HandleRegister)
