@@ -19,21 +19,22 @@ func NewRouter(logger *logger.Logger,
 	gzipMiddleware := middleware.NewGzipMiddleware(logger)
 	authMiddleware := middleware.NewAuthMiddleware(authorizer, logger)
 
-	r.Use(
-		gzipMiddleware.WithGzipRequestDecompression,
-		gzipMiddleware.WithGzipResponseCompression)
+	r.Use(gzipMiddleware.WithGzipRequestDecompression)
+	r.Use(gzipMiddleware.WithGzipResponseCompression)
 
 	r.Get("/ping", pingHandler.HandlePingRepository)
-	r.Post("/api/user/register", authHandler.HandleRegister)
-	r.Post("/api/user/login", authHandler.HandleLogin)
+	r.Route("/api/user", func(r chi.Router) {
+		r.Post("/register", authHandler.HandleRegister)
+		r.Post("/login", authHandler.HandleLogin)
 
-	r.Group(func(r chi.Router) {
-		r.Use(authMiddleware.WithAuth)
-		r.Post("/api/user/orders", orderHandler.HandlePostNewOrder)
-		r.Get("/api/user/orders", orderHandler.HandleGetOrders)
-		r.Get("/api/user/balance", balanceHandler.HandleGetUserBalance)
-		r.Post("/api/user/balance/withdraw", balanceHandler.HandlePostWithdraw)
-		r.Get("/api/user/withdrawals", balanceHandler.HandleGetWithdrawals)
+		r.Group(func(r chi.Router) {
+			r.Use(authMiddleware.WithAuth)
+			r.Post("/orders", orderHandler.HandlePostNewOrder)
+			r.Get("/orders", orderHandler.HandleGetOrders)
+			r.Get("/balance", balanceHandler.HandleGetUserBalance)
+			r.Post("/balance/withdraw", balanceHandler.HandlePostWithdraw)
+			r.Get("/withdrawals", balanceHandler.HandleGetWithdrawals)
+		})
 	})
 
 	return r
