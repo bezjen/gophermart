@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/bezjen/gophermart/internal/config"
 	"github.com/bezjen/gophermart/internal/config/db"
 	"github.com/bezjen/gophermart/internal/handler"
@@ -50,12 +49,11 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	accrualService := service.NewAccrualRestService("http://localhost:8080", storage)
+	accrualService := service.NewAccrualRestService(cfg.AccrualAddr, storage)
 	go accrualService.StartOrderProcessingWorker(ctx, 30*time.Second)
 
 	go func() {
-		serverAddr := fmt.Sprintf("%s:%s", cfg.ServerHost, cfg.ServerPort)
-		if err = http.ListenAndServe(serverAddr, gophermartRouter); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		if err = http.ListenAndServe(cfg.RunAddr, gophermartRouter); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Printf("Server failed to start: %v", err)
 			cancel()
 		}
