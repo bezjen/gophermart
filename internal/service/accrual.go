@@ -2,10 +2,10 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"github.com/bezjen/gophermart/internal/model"
 	"github.com/bezjen/gophermart/internal/repository"
+	"github.com/go-resty/resty/v2"
 	"net/http"
 	"time"
 )
@@ -15,16 +15,14 @@ type AccrualService interface {
 }
 
 type AccrualRestService struct {
-	client         *http.Client // TODO: move to resty
+	client         *resty.Client
 	accrualBaseURL string
 	storage        repository.Repository
 }
 
 func NewAccrualRestService(accrualBaseURL string, storage repository.Repository) *AccrualRestService {
 	return &AccrualRestService{
-		client: &http.Client{
-			Timeout: 10 * time.Second,
-		},
+		client:         resty.New().SetBaseURL(accrualBaseURL),
 		accrualBaseURL: accrualBaseURL,
 		storage:        storage,
 	}
@@ -57,7 +55,7 @@ func (s *AccrualRestService) processPendingOrders(ctx context.Context) error {
 		case <-ctx.Done():
 			return ctx.Err()
 		default:
-			if err := s.updateOrderStatus(ctx, order.Number); err != nil {
+			if err = s.updateOrderStatus(ctx, order.Number); err != nil {
 				fmt.Printf("Error updating order %s: %v\n", order.Number, err)
 				continue
 			}
@@ -89,32 +87,21 @@ func (s *AccrualRestService) updateOrderStatus(ctx context.Context, orderNumber 
 }
 
 func (s *AccrualRestService) getOrderStatus(ctx context.Context, orderNumber string) (*model.AccrualResponse, error) {
-	url := fmt.Sprintf("%s/api/orders/%s", s.accrualBaseURL, orderNumber)
-
-	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
-	if err != nil {
-		return nil, fmt.Errorf("create request: %w", err)
-	}
-
-	resp, err := s.client.Do(req)
+	var accrualResp model.AccrualResponse
+	resp, err := s.client.R().SetContext(ctx).SetResult(&accrualResp).Get("/api/orders/" + orderNumber)
 	if err != nil {
 		return nil, fmt.Errorf("execute request: %w", err)
 	}
-	defer resp.Body.Close()
 
-	switch resp.StatusCode {
+	switch resp.StatusCode() {
 	case http.StatusOK:
-		var accrualResp model.AccrualResponse
-		if err := json.NewDecoder(resp.Body).Decode(&accrualResp); err != nil {
-			return nil, fmt.Errorf("decode response: %w", err)
-		}
 		return &accrualResp, nil
 
 	case http.StatusNoContent:
 		return nil, nil
 
 	case http.StatusTooManyRequests:
-		retryAfter := resp.Header.Get("Retry-After")
+		retryAfter := resp.Header().Get("Retry-After")
 		return nil, &RateLimitError{RetryAfter: retryAfter}
 
 	case http.StatusInternalServerError:
