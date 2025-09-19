@@ -100,9 +100,12 @@ func (p *PostgresRepository) GetOrders(ctx context.Context, userID int) ([]model
 	return orders, rows.Err()
 }
 
-func (p *PostgresRepository) GetPendingOrders(ctx context.Context) ([]model.Order, error) {
-	rows, err := p.db.QueryContext(ctx,
-		"SELECT id, number, status, accrual, uploaded_at FROM t_order WHERE status in ('NEW', 'PROCESSING', 'REGISTERED') ORDER BY uploaded_at")
+func (p *PostgresRepository) GetPendingOrders(ctx context.Context, limit int) ([]model.Order, error) {
+	querySelect := `
+		SELECT id, number, status, accrual, uploaded_at 
+		FROM t_order 
+		WHERE status in ('NEW', 'PROCESSING', 'REGISTERED') ORDER BY uploaded_at limit $1`
+	rows, err := p.db.QueryContext(ctx, querySelect, limit)
 	if err != nil {
 		return nil, err
 	}

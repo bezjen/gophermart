@@ -4,11 +4,18 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/bezjen/gophermart/internal/logger"
 	"github.com/bezjen/gophermart/internal/model"
 	"github.com/go-resty/resty/v2"
+	"go.uber.org/zap"
 	"net/http"
 	"strconv"
+	"sync"
 	"time"
+)
+
+const (
+	defaultWorkerCount = 5
 )
 
 type AccrualService interface {
@@ -19,18 +26,22 @@ type AccrualRestService struct {
 	client         *resty.Client
 	accrualBaseURL string
 	orderService   OrderService
+	logger         *logger.Logger
+	workerCount    int
 }
 
-func NewAccrualRestService(accrualBaseURL string, orderService OrderService) *AccrualRestService {
+func NewAccrualRestService(accrualBaseURL string, orderService OrderService, logger *logger.Logger) *AccrualRestService {
 	return &AccrualRestService{
 		client:         resty.New().SetBaseURL(accrualBaseURL),
 		accrualBaseURL: accrualBaseURL,
 		orderService:   orderService,
+		logger:         logger,
+		workerCount:    defaultWorkerCount,
 	}
 }
 
 func (s *AccrualRestService) StartOrderProcessingWorker(ctx context.Context, interval time.Duration) {
-	ticker := time.NewTicker(interval) // TODO: add batching
+	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
 	for {
@@ -46,26 +57,49 @@ func (s *AccrualRestService) StartOrderProcessingWorker(ctx context.Context, int
 }
 
 func (s *AccrualRestService) processPendingOrders(ctx context.Context) error {
-	orders, err := s.orderService.GetPendingOrders(ctx)
+	orders, err := s.orderService.GetPendingOrders(ctx, s.workerCount)
 	if err != nil {
-		return fmt.Errorf("get pending orders: %w", err)
+		return fmt.Errorf("failed to get pending orders: %w", err)
 	}
 
+	if len(orders) == 0 {
+		return nil
+	}
+
+	jobs := make(chan model.Order, len(orders))
 	for _, order := range orders {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		default:
-			if err = s.updateOrderStatus(ctx, order.Number); err != nil {
-				fmt.Printf("Error updating order %s: %v\n", order.Number, err)
-				continue
-			}
-
-			time.Sleep(100 * time.Millisecond)
-		}
+		jobs <- order
 	}
+	close(jobs)
+
+	var wg sync.WaitGroup
+	for i := 0; i < s.workerCount; i++ {
+		wg.Add(1)
+		go s.worker(ctx, &wg, jobs)
+	}
+	wg.Wait()
 
 	return nil
+}
+
+func (s *AccrualRestService) worker(ctx context.Context, wg *sync.WaitGroup, jobs <-chan model.Order) {
+	defer wg.Done()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case order, ok := <-jobs:
+			if !ok {
+				return
+			}
+			if err := s.updateOrderStatus(ctx, order.Number); err != nil {
+				s.logger.Error("Failed to update order status",
+					zap.Error(err),
+					zap.String("order_number", order.Number),
+				)
+			}
+		}
+	}
 }
 
 func (s *AccrualRestService) updateOrderStatus(ctx context.Context, orderNumber string) error {
