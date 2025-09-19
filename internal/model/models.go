@@ -14,12 +14,12 @@ type DBUser struct {
 }
 
 type Order struct {
-	ID         int       `json:"-"`
-	Number     string    `json:"number"`
-	Status     string    `json:"status"`
-	Accrual    float64   `json:"accrual,omitempty"`
-	UploadedAt time.Time `json:"uploaded_at"`
-	UserID     int       `json:"-"`
+	ID         int         `json:"-"`
+	Number     string      `json:"number"`
+	Status     OrderStatus `json:"status"`
+	Accrual    float64     `json:"accrual,omitempty"`
+	UploadedAt time.Time   `json:"uploaded_at"`
+	UserID     int         `json:"-"`
 }
 
 type Balance struct {
@@ -34,7 +34,25 @@ type Withdrawal struct {
 }
 
 type AccrualResponse struct {
-	Order   string  `json:"order"`
-	Status  string  `json:"status"`
-	Accrual float64 `json:"accrual"`
+	Order   string             `json:"order"`
+	Status  AccrualOrderStatus `json:"status"`
+	Accrual float64            `json:"accrual"`
 }
+
+type AccrualOrderStatus string
+
+const (
+	AccrualOrderStatusRegistered AccrualOrderStatus = "REGISTERED"
+	AccrualOrderStatusProcessing AccrualOrderStatus = "PROCESSING"
+	AccrualOrderStatusInvalid    AccrualOrderStatus = "INVALID"
+	AccrualOrderStatusProcessed  AccrualOrderStatus = "PROCESSED"
+)
+
+type OrderStatus string
+
+const (
+	OrderStatusNew        OrderStatus = "NEW"
+	OrderStatusProcessing OrderStatus = "PROCESSING"
+	OrderStatusInvalid    OrderStatus = "INVALID"
+	OrderStatusProcessed  OrderStatus = "PROCESSED"
+)

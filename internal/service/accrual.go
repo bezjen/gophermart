@@ -120,7 +120,7 @@ func (s *AccrualRestService) updateOrderStatus(ctx context.Context, orderNumber 
 
 	order := model.Order{
 		Number:  accrualResp.Order,
-		Status:  accrualResp.Status,
+		Status:  mapAccrualOrderStatus(accrualResp.Status),
 		Accrual: accrualResp.Accrual,
 	}
 
@@ -163,4 +163,19 @@ type RateLimitError struct {
 
 func (e *RateLimitError) Error() string {
 	return fmt.Sprintf("rate limit exceeded, retry after: %d", e.RetryAfter)
+}
+
+func mapAccrualOrderStatus(accrualOrderStatus model.AccrualOrderStatus) model.OrderStatus {
+	switch accrualOrderStatus {
+	case "REGISTERED":
+		return model.OrderStatusProcessing
+	case "PROCESSING":
+		return model.OrderStatusProcessing
+	case "PROCESSED":
+		return model.OrderStatusProcessed
+	case "INVALID":
+		return model.OrderStatusInvalid
+	default:
+		return model.OrderStatusNew
+	}
 }
