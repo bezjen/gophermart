@@ -72,7 +72,8 @@ func (s *AccrualRestService) updateOrderStatus(ctx context.Context, orderNumber 
 	accrualResp, err := s.getOrderStatus(ctx, orderNumber)
 	if err != nil {
 		if errors.Is(err, &RateLimitError{}) {
-			if rateLimitErr, ok := err.(*RateLimitError); ok {
+			var rateLimitErr *RateLimitError
+			if errors.As(err, &rateLimitErr) {
 				time.Sleep(time.Duration(rateLimitErr.RetryAfter) * time.Second)
 			}
 			return nil
