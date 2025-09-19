@@ -82,6 +82,7 @@ func (h *BalanceHandler) HandleGetWithdrawals(rw http.ResponseWriter, r *http.Re
 	}
 
 	if len(withdrawals) == 0 {
+		rw.Header().Set("Content-Type", "application/json")
 		rw.WriteHeader(http.StatusNoContent)
 		return
 	}

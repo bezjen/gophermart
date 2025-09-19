@@ -15,7 +15,7 @@ type AccrualService interface {
 }
 
 type AccrualRestService struct {
-	client         *http.Client
+	client         *http.Client // TODO: move to resty
 	accrualBaseURL string
 	storage        repository.Repository
 }
@@ -31,7 +31,7 @@ func NewAccrualRestService(accrualBaseURL string, storage repository.Repository)
 }
 
 func (s *AccrualRestService) StartOrderProcessingWorker(ctx context.Context, interval time.Duration) {
-	ticker := time.NewTicker(interval)
+	ticker := time.NewTicker(interval) // TODO: add batching
 	defer ticker.Stop()
 
 	for {

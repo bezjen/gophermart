@@ -50,7 +50,7 @@ func main() {
 	defer cancel()
 
 	accrualService := service.NewAccrualRestService(cfg.AccrualAddr, storage)
-	go accrualService.StartOrderProcessingWorker(ctx, 30*time.Second)
+	go accrualService.StartOrderProcessingWorker(ctx, 1*time.Second) // TODO: move to config
 
 	go func() {
 		if err = http.ListenAndServe(cfg.RunAddr, gophermartRouter); err != nil && !errors.Is(err, http.ErrServerClosed) {
