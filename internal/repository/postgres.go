@@ -35,8 +35,8 @@ func (p *PostgresRepository) CreateUser(ctx context.Context, login, passwordHash
 	return userID, nil
 }
 
-func (p *PostgresRepository) GetUserByLogin(ctx context.Context, login string) (*model.DbUser, error) {
-	var user model.DbUser
+func (p *PostgresRepository) GetUserByLogin(ctx context.Context, login string) (*model.DBUser, error) {
+	var user model.DBUser
 	query := "SELECT id, login, password_hash FROM t_user WHERE login=$1"
 	err := p.db.QueryRowContext(ctx, query, login).Scan(&user.ID, &user.Login, &user.PasswordHash)
 	if err != nil {

@@ -24,7 +24,7 @@ func NewAuthHandler(logger *logger.Logger, authorizer service.Authorizer) *AuthH
 }
 
 func (h *AuthHandler) HandleRegister(rw http.ResponseWriter, r *http.Request) {
-	var user model.ApiUser
+	var user model.APIUser
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		http.Error(rw, "Invalid request format", http.StatusBadRequest)
 		return
@@ -50,7 +50,7 @@ func (h *AuthHandler) HandleRegister(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AuthHandler) HandleLogin(rw http.ResponseWriter, r *http.Request) {
-	var user model.ApiUser
+	var user model.APIUser
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		http.Error(rw, "Invalid request format", http.StatusBadRequest)
 		return

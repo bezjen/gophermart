@@ -17,7 +17,7 @@ var (
 
 type Repository interface {
 	CreateUser(ctx context.Context, login, passwordHash string) (int, error)
-	GetUserByLogin(ctx context.Context, login string) (*model.DbUser, error)
+	GetUserByLogin(ctx context.Context, login string) (*model.DBUser, error)
 
 	CreateOrder(ctx context.Context, userID int, orderNumber string) error
 	GetOrders(ctx context.Context, userID int) ([]model.Order, error)

@@ -169,23 +169,23 @@ func (_m *Repository) GetPendingOrders(ctx context.Context) ([]model.Order, erro
 }
 
 // GetUserByLogin provides a mock function with given fields: ctx, login
-func (_m *Repository) GetUserByLogin(ctx context.Context, login string) (*model.DbUser, error) {
+func (_m *Repository) GetUserByLogin(ctx context.Context, login string) (*model.DBUser, error) {
 	ret := _m.Called(ctx, login)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetUserByLogin")
 	}
 
-	var r0 *model.DbUser
+	var r0 *model.DBUser
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (*model.DbUser, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*model.DBUser, error)); ok {
 		return rf(ctx, login)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) *model.DbUser); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) *model.DBUser); ok {
 		r0 = rf(ctx, login)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*model.DbUser)
+			r0 = ret.Get(0).(*model.DBUser)
 		}
 	}
 

@@ -93,7 +93,7 @@ func TestJWTAuthorizer_Login(t *testing.T) {
 			password: "correctpassword",
 			mockSetup: func(mockRepo *mocks.Repository) {
 				hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("correctpassword"), 14)
-				user := &model.DbUser{ID: 1, Login: "testuser", PasswordHash: string(hashedPassword)}
+				user := &model.DBUser{ID: 1, Login: "testuser", PasswordHash: string(hashedPassword)}
 				mockRepo.On("GetUserByLogin", mock.Anything, "testuser").Return(user, nil)
 			},
 			expectedError: nil,
@@ -104,7 +104,7 @@ func TestJWTAuthorizer_Login(t *testing.T) {
 			password: "wrongpassword",
 			mockSetup: func(mockRepo *mocks.Repository) {
 				hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("correctpassword"), 14)
-				user := &model.DbUser{ID: 1, Login: "testuser", PasswordHash: string(hashedPassword)}
+				user := &model.DBUser{ID: 1, Login: "testuser", PasswordHash: string(hashedPassword)}
 				mockRepo.On("GetUserByLogin", mock.Anything, "testuser").Return(user, nil)
 			},
 			expectedError: ErrInvalidCredentials,
@@ -114,7 +114,7 @@ func TestJWTAuthorizer_Login(t *testing.T) {
 			login:    "nonexistent",
 			password: "password",
 			mockSetup: func(mockRepo *mocks.Repository) {
-				mockRepo.On("GetUserByLogin", mock.Anything, "nonexistent").Return((*model.DbUser)(nil), errors.New("user not found"))
+				mockRepo.On("GetUserByLogin", mock.Anything, "nonexistent").Return((*model.DBUser)(nil), errors.New("user not found"))
 			},
 			expectedError: ErrInvalidCredentials,
 		},
@@ -123,7 +123,7 @@ func TestJWTAuthorizer_Login(t *testing.T) {
 			login:    "testuser",
 			password: "password",
 			mockSetup: func(mockRepo *mocks.Repository) {
-				mockRepo.On("GetUserByLogin", mock.Anything, "testuser").Return((*model.DbUser)(nil), errors.New("db connection error"))
+				mockRepo.On("GetUserByLogin", mock.Anything, "testuser").Return((*model.DBUser)(nil), errors.New("db connection error"))
 			},
 			expectedError: ErrInvalidCredentials,
 		},

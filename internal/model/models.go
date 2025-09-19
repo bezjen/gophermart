@@ -2,12 +2,12 @@ package model
 
 import "time"
 
-type ApiUser struct {
+type APIUser struct {
 	Login    string `json:"login"`
 	Password string `json:"password"`
 }
 
-type DbUser struct {
+type DBUser struct {
 	ID           int    `json:"id"`
 	Login        string `json:"login"`
 	PasswordHash string `json:"password_hash"`
