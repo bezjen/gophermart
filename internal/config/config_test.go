@@ -66,10 +66,10 @@ func TestParseFlags(t *testing.T) {
 			},
 		},
 		{
-			name: "Both environment and flags (use env)",
+			name: "Both environment and flags (use flag)",
 			args: []string{"gophermart.exe", "-a=localhost1:8081"},
 			env: map[string]string{
-				"RUN_ADDRESS": "localhost1:8081",
+				"RUN_ADDRESS": "localhost2:8082",
 			},
 			expectedConfig: Config{
 				RunAddr:     "localhost1:8081",

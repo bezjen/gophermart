@@ -24,32 +24,41 @@ func ParseConfig() {
 	flagAccrualAddr := flag.String("aa", "", "accrual server address and port")
 	flag.Parse()
 
-	addr, addrExists := os.LookupEnv("RUN_ADDRESS")
-	if addrExists {
+	if *flagRunAddr != "localhost:8080" {
+		AppConfig.RunAddr = *flagRunAddr
+	} else if addr, addrExists := os.LookupEnv("RUN_ADDRESS"); addrExists {
 		AppConfig.RunAddr = addr
 	} else {
 		AppConfig.RunAddr = *flagRunAddr
 	}
-	logLevel, logLevelExists := os.LookupEnv("LOG_LEVEL")
-	if logLevelExists {
+
+	if *flagLogLevel != "info" {
+		AppConfig.LogLevel = *flagLogLevel
+	} else if logLevel, logLevelExists := os.LookupEnv("LOG_LEVEL"); logLevelExists {
 		AppConfig.LogLevel = logLevel
 	} else {
 		AppConfig.LogLevel = *flagLogLevel
 	}
-	databaseDSN, databaseDSNExists := os.LookupEnv("DATABASE_URI")
-	if databaseDSNExists {
+
+	if *flagDatabaseDSN != "" {
+		AppConfig.DatabaseDSN = *flagDatabaseDSN
+	} else if databaseDSN, databaseDSNExists := os.LookupEnv("DATABASE_URI"); databaseDSNExists {
 		AppConfig.DatabaseDSN = databaseDSN
 	} else {
 		AppConfig.DatabaseDSN = *flagDatabaseDSN
 	}
-	secretKey, secretKeyExists := os.LookupEnv("SECRET_KEY")
-	if secretKeyExists {
+
+	if *flagSecretKey != "" {
+		AppConfig.SecretKey = *flagSecretKey
+	} else if secretKey, secretKeyExists := os.LookupEnv("SECRET_KEY"); secretKeyExists {
 		AppConfig.SecretKey = secretKey
-	} else if *flagSecretKey != "" {
+	} else {
 		AppConfig.SecretKey = *flagSecretKey
 	}
-	accrualAddr, accrualAddrExists := os.LookupEnv("ACCRUAL_SYSTEM_ADDRESS")
-	if accrualAddrExists {
+
+	if *flagAccrualAddr != "" {
+		AppConfig.AccrualAddr = *flagAccrualAddr
+	} else if accrualAddr, accrualAddrExists := os.LookupEnv("ACCRUAL_SYSTEM_ADDRESS"); accrualAddrExists {
 		AppConfig.AccrualAddr = accrualAddr
 	} else {
 		AppConfig.AccrualAddr = *flagAccrualAddr
