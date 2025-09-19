@@ -109,7 +109,7 @@ func TestParseFlags(t *testing.T) {
 			name: "Env for data source name",
 			args: []string{"gophermart.exe"},
 			env: map[string]string{
-				"DATABASE_DSN": "ds",
+				"DATABASE_URI": "ds",
 			},
 			expectedConfig: Config{
 				RunAddr:     "localhost:8080",

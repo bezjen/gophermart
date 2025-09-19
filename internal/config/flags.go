@@ -36,7 +36,7 @@ func ParseConfig() {
 	} else {
 		AppConfig.LogLevel = *flagLogLevel
 	}
-	databaseDSN, databaseDSNExists := os.LookupEnv("DATABASE_DSN")
+	databaseDSN, databaseDSNExists := os.LookupEnv("DATABASE_URI")
 	if databaseDSNExists {
 		AppConfig.DatabaseDSN = databaseDSN
 	} else {
