@@ -97,6 +97,9 @@ func (p *PostgresRepository) GetOrders(ctx context.Context, userID int) ([]model
 		}
 		orders = append(orders, order)
 	}
+	if orders == nil {
+		return []model.Order{}, rows.Err()
+	}
 	return orders, rows.Err()
 }
 
@@ -122,6 +125,9 @@ func (p *PostgresRepository) GetPendingOrders(ctx context.Context, limit int) ([
 			order.Accrual = accrual.Float64
 		}
 		orders = append(orders, order)
+	}
+	if orders == nil {
+		return []model.Order{}, rows.Err()
 	}
 	return orders, rows.Err()
 }
@@ -225,6 +231,9 @@ func (p *PostgresRepository) GetWithdrawals(ctx context.Context, userID int) ([]
 			return nil, err
 		}
 		withdrawals = append(withdrawals, w)
+	}
+	if withdrawals == nil {
+		return []model.Withdrawal{}, rows.Err()
 	}
 	return withdrawals, rows.Err()
 }
