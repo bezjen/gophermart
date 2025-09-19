@@ -23,6 +23,7 @@ func (w GzipWriter) Header() http.Header {
 }
 
 func (w GzipWriter) Write(p []byte) (int, error) {
+	w.rw.Header().Set("Content-Encoding", "gzip")
 	return w.gw.Write(p)
 }
 
