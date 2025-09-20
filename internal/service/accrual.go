@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"strconv"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -23,13 +24,14 @@ type AccrualService interface {
 }
 
 type AccrualRestService struct {
-	client         *resty.Client
-	accrualBaseURL string
-	orderService   OrderService
-	logger         *logger.Logger
-	workerCount    int
-	rateLimitUntil time.Time
-	rateLimitMutex sync.Mutex
+	client          *resty.Client
+	accrualBaseURL  string
+	orderService    OrderService
+	logger          *logger.Logger
+	workerCount     int
+	rateLimitUntil  time.Time
+	rateLimitActive atomic.Bool
+	rateLimitMutex  sync.Mutex
 }
 
 func NewAccrualRestService(accrualBaseURL string, orderService OrderService, logger *logger.Logger) *AccrualRestService {
@@ -123,16 +125,22 @@ func (s *AccrualRestService) acquireRateLimitPause(d time.Duration) {
 	s.rateLimitMutex.Lock()
 	defer s.rateLimitMutex.Unlock()
 	s.rateLimitUntil = time.Now().Add(d)
+	s.rateLimitActive.Store(true)
 }
 
 func (s *AccrualRestService) waitForRateLimit(ctx context.Context) error {
-	s.rateLimitMutex.Lock()
-	waitTime := time.Until(s.rateLimitUntil)
-	s.rateLimitMutex.Unlock()
-
-	if waitTime <= 0 {
+	if !s.rateLimitActive.Load() {
 		return nil
 	}
+
+	s.rateLimitMutex.Lock()
+	waitTime := time.Until(s.rateLimitUntil)
+	if waitTime <= 0 {
+		s.rateLimitActive.Store(false)
+		s.rateLimitMutex.Unlock()
+		return nil
+	}
+	s.rateLimitMutex.Unlock()
 
 	timer := time.NewTimer(waitTime)
 	defer timer.Stop()
@@ -141,6 +149,9 @@ func (s *AccrualRestService) waitForRateLimit(ctx context.Context) error {
 	case <-ctx.Done():
 		return ctx.Err()
 	case <-timer.C:
+		s.rateLimitMutex.Lock()
+		s.rateLimitActive.Store(false)
+		s.rateLimitMutex.Unlock()
 		return nil
 	}
 }
