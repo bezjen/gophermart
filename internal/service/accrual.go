@@ -28,6 +28,8 @@ type AccrualRestService struct {
 	orderService   OrderService
 	logger         *logger.Logger
 	workerCount    int
+	rateLimitUntil time.Time
+	rateLimitMutex sync.Mutex
 }
 
 func NewAccrualRestService(accrualBaseURL string, orderService OrderService, logger *logger.Logger) *AccrualRestService {
@@ -50,7 +52,7 @@ func (s *AccrualRestService) StartOrderProcessingWorker(ctx context.Context, int
 			return
 		case <-ticker.C:
 			if err := s.processPendingOrders(ctx); err != nil {
-				fmt.Printf("Error processing pending orders: %v\n", err)
+				s.logger.Error("Error processing pending orders", zap.Error(err))
 			}
 		}
 	}
@@ -92,25 +94,60 @@ func (s *AccrualRestService) worker(ctx context.Context, wg *sync.WaitGroup, job
 			if !ok {
 				return
 			}
-			if err := s.updateOrderStatus(ctx, order.Number); err != nil {
-				s.logger.Error("Failed to update order status",
-					zap.Error(err),
-					zap.String("order_number", order.Number),
-				)
+
+			if err := s.waitForRateLimit(ctx); err != nil {
+				s.logger.Info("Worker shutting down while waiting for rate limit.", zap.Error(err))
+				return
+			}
+
+			err := s.updateOrderStatus(ctx, order.Number)
+			if err != nil {
+				var rateLimitErr *RateLimitError
+				if errors.As(err, &rateLimitErr) {
+					pauseDuration := time.Duration(rateLimitErr.RetryAfter) * time.Second
+					s.acquireRateLimitPause(pauseDuration)
+					s.logger.Warn("Accrual service rate limit acquired",
+						zap.Int("retryAfter", rateLimitErr.RetryAfter))
+				} else {
+					s.logger.Error("Failed to update order status",
+						zap.Error(err),
+						zap.String("order_number", order.Number),
+					)
+				}
 			}
 		}
+	}
+}
+
+func (s *AccrualRestService) acquireRateLimitPause(d time.Duration) {
+	s.rateLimitMutex.Lock()
+	defer s.rateLimitMutex.Unlock()
+	s.rateLimitUntil = time.Now().Add(d)
+}
+
+func (s *AccrualRestService) waitForRateLimit(ctx context.Context) error {
+	s.rateLimitMutex.Lock()
+	waitTime := time.Until(s.rateLimitUntil)
+	s.rateLimitMutex.Unlock()
+
+	if waitTime <= 0 {
+		return nil
+	}
+
+	timer := time.NewTimer(waitTime)
+	defer timer.Stop()
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-timer.C:
+		return nil
 	}
 }
 
 func (s *AccrualRestService) updateOrderStatus(ctx context.Context, orderNumber string) error {
 	accrualResp, err := s.getOrderStatus(ctx, orderNumber)
 	if err != nil {
-		if errors.Is(err, &RateLimitError{}) {
-			var rateLimitErr *RateLimitError
-			if errors.As(err, &rateLimitErr) {
-				time.Sleep(time.Duration(rateLimitErr.RetryAfter) * time.Second)
-			}
-		}
 		return err
 	}
 
